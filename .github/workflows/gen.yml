@@ -4,7 +4,7 @@ on: workflow_dispatch
 
 jobs:
   codegen:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -27,10 +27,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install headers
+        continue-on-error: true
         run: |
-          sudo apt -y update
-          sudo apt -y install libc6-dev libc6-dev-{arm64,armel,riscv64,ppc64el,s390x}-cross
+          sudo apt-get -y update
+          sudo apt -y install linux-headers-`uname -r` libelf-dev libc6-dev libc6-dev-{arm64,armel,riscv64,ppc64el,s390x}-cross
 
+          sudo dpkg --add-architecture arm64
+          sudo dpkg --add-architecture armel
+          sudo dpkg --add-architecture riscv64
+          sudo dpkg --add-architecture ppc64el
+          sudo dpkg --add-architecture s390x
+          sudo find / -name posix_types.h | grep "asm/posix_types.h"
+  
       - name: Run codegen
         run: |
           cargo xtask codegen
